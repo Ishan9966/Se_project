@@ -87,7 +87,7 @@ const MyPrescriptions = () => {
                   
                   {pres.imageUrl && (
                     <a 
-                      href={`http://localhost:5000${pres.imageUrl}`} 
+                      href={pres.imageUrl.startsWith('http') ? pres.imageUrl : `http://localhost:5000${pres.imageUrl}`}
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-2 text-sm font-medium w-full justify-center md:w-auto"

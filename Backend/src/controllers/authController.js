@@ -3,6 +3,8 @@ const User = require('../models/User');
 const Appointment = require('../models/Appointment');
 const jwt = require('jsonwebtoken');
 const Joi = require('joi');
+const crypto = require('crypto');
+const { sendEmail } = require('../services/emailService');
 
 // Validation schemas
 const signupSchema = Joi.object({
@@ -266,6 +268,135 @@ exports.getPatients = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching patients',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Forgot Password - Send OTP
+// @route   POST /api/auth/forgotpassword
+// @access  Public
+exports.forgotPassword = async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.body.email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'There is no user with that email address'
+      });
+    }
+
+    // Generate random 6 digit code
+    const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Hash token and set to resetPasswordToken field
+    user.resetPasswordToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    // Set expire (10 minutes)
+    user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+
+    await user.save({ validateBeforeSave: false });
+
+    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please use the following code to reset your password:
+
+${resetToken}
+
+If you did not request this, please ignore this email.`;
+
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: 'Password Reset Code',
+        text: message
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'Email sent'
+      });
+    } catch (err) {
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+
+      await user.save({ validateBeforeSave: false });
+
+      return res.status(500).json({
+        success: false,
+        message: 'Email could not be sent'
+      });
+    }
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server Error',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Reset Password
+// @route   PUT /api/auth/resetpassword
+// @access  Public
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, code, password } = req.body;
+
+    if (!email || !code || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide email, code and new password'
+      });
+    }
+
+    // Get hashed token
+    const resetPasswordToken = crypto
+      .createHash('sha256')
+      .update(code)
+      .digest('hex');
+
+    const user = await User.findOne({
+      email,
+      resetPasswordToken,
+      resetPasswordExpire: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid code or email, or code expired'
+      });
+    }
+
+    // Set new password
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    // Generate token so user is logged in
+    const token = generateToken(user._id);
+
+    res.status(200).json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server Error',
       error: error.message
     });
   }

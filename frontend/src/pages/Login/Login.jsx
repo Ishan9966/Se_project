@@ -16,11 +16,12 @@ const Login = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError(''); // Clear error on input
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
+    if (loading) return;
+
     setLoading(true);
     setError('');
 
@@ -77,9 +78,14 @@ const Login = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <Link to="/forgot-password" className="text-sm text-teal-600 hover:text-teal-700 font-medium">
+                Forgot Password?
+              </Link>
+            </div>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input

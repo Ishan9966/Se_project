@@ -1,15 +1,16 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const fs = require('fs');
+const axios = require('axios');
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 // Use a vision-capable model (gemini-flash-latest supports images)
 const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
-function fileToGenerativePart(path, mimeType) {
+async function urlToGenerativePart(url, mimeType) {
+  const response = await axios.get(url, { responseType: 'arraybuffer' });
   return {
     inlineData: {
-      data: fs.readFileSync(path).toString("base64"),
+      data: Buffer.from(response.data).toString("base64"),
       mimeType
     },
   };
@@ -24,7 +25,7 @@ exports.analyzeSymptom = async (req, res) => {
       });
     }
 
-    const imagePart = fileToGenerativePart(req.file.path, req.file.mimetype);
+    const imagePart = await urlToGenerativePart(req.file.path, req.file.mimetype);
     
     const prompt = `
       You are a medical AI assistant. Analyze this image of a symptom.
@@ -41,9 +42,6 @@ exports.analyzeSymptom = async (req, res) => {
     const response = await result.response;
     const text = response.text();
 
-    // Clean up file after processing
-    fs.unlinkSync(req.file.path);
-
     res.json({
       success: true,
       analysis: text
@@ -51,11 +49,6 @@ exports.analyzeSymptom = async (req, res) => {
 
   } catch (error) {
     console.error('Symptom analysis error:', error);
-    
-    // If file exists, try to delete it
-    if (req.file && req.file.path) {
-        try { fs.unlinkSync(req.file.path); } catch(e) {}
-    }
 
     res.status(500).json({
       success: false,

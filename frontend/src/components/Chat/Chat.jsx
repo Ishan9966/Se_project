@@ -37,9 +37,13 @@ const Chat = ({ receiverId, receiverName }) => {
   useEffect(() => {
     if (socket) {
       socket.on('message:receive', (message) => {
+        const msgSender = typeof message.sender === 'object' ? message.sender._id : message.sender;
+        const msgReceiver = typeof message.receiver === 'object' ? message.receiver._id : message.receiver;
+        const currentUserId = user.id || user._id;
+
         if (
-          (message.sender === receiverId && message.receiver === user.id) ||
-          (message.sender === user.id && message.receiver === receiverId)
+          (String(msgSender) === String(receiverId) && String(msgReceiver) === String(currentUserId)) ||
+          (String(msgSender) === String(currentUserId) && String(msgReceiver) === String(receiverId))
         ) {
           setMessages(prev => [...prev, message]);
           scrollToBottom();
@@ -50,7 +54,7 @@ const Chat = ({ receiverId, receiverName }) => {
         socket.off('message:receive');
       };
     }
-  }, [socket, receiverId, user.id]);
+  }, [socket, receiverId, user]);
 
   const handleSend = async (e) => {
     e.preventDefault();

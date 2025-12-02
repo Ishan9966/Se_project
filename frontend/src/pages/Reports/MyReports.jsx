@@ -74,7 +74,7 @@ const MyReports = () => {
                   
                   {report.fileUrl && (
                     <a 
-                      href={`http://localhost:5000${report.fileUrl}`} 
+                      href={report.fileUrl.startsWith('http') ? report.fileUrl : `http://localhost:5000${report.fileUrl}`}
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-2 text-sm font-medium"

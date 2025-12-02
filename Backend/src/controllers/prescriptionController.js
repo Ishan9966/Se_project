@@ -47,7 +47,7 @@ exports.addPrescription = async (req, res) => {
       patient: patientId,
       medicines: parsedMedicines,
       notes,
-      imageUrl: req.file ? `/uploads/${req.file.filename}` : null
+      imageUrl: req.file ? req.file.path : null
     });
 
     res.status(201).json({
@@ -98,7 +98,7 @@ exports.updatePrescription = async (req, res) => {
     if (notes) prescription.notes = notes;
     
     if (req.file) {
-      prescription.imageUrl = `/uploads/${req.file.filename}`;
+      prescription.imageUrl = req.file.path;
     }
 
     await prescription.save();

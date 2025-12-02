@@ -39,7 +39,7 @@ exports.addReport = async (req, res) => {
       title,
       notes,
       type: type || 'clinical_note',
-      fileUrl: req.file ? `/uploads/${req.file.filename}` : null
+      fileUrl: req.file ? req.file.path : null
     });
 
     res.status(201).json({
@@ -77,7 +77,7 @@ exports.updateReport = async (req, res) => {
     report.notes = notes || report.notes;
     report.type = type || report.type;
     if (req.file) {
-      report.fileUrl = `/uploads/${req.file.filename}`;
+      report.fileUrl = req.file.path;
     }
 
     await report.save();

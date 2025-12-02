@@ -7,6 +7,8 @@ import { useAuth } from './hooks/useAuth';
 // Pages
 import Login from './pages/Login/Login';
 import Signup from './pages/Signup/Signup';
+import ForgotPassword from './pages/ForgotPassword/ForgotPassword';
+import ResetPassword from './pages/ResetPassword/ResetPassword';
 import PatientDashboard from './pages/PatientDashboard/PatientDashboard';
 import DoctorDashboard from './pages/DoctorDashboard/DoctorDashboard';
 import Appointments from './pages/Appointments/Appointments';
@@ -43,6 +45,8 @@ function App() {
       <Routes>
         <Route path="/login" element={!user ? <Login /> : <Navigate to={user.role === 'doctor' ? '/doctor/dashboard' : '/patient/dashboard'} />} />
         <Route path="/signup" element={!user ? <Signup /> : <Navigate to={user.role === 'doctor' ? '/doctor/dashboard' : '/patient/dashboard'} />} />
+        <Route path="/forgot-password" element={!user ? <ForgotPassword /> : <Navigate to={user.role === 'doctor' ? '/doctor/dashboard' : '/patient/dashboard'} />} />
+        <Route path="/reset-password" element={!user ? <ResetPassword /> : <Navigate to={user.role === 'doctor' ? '/doctor/dashboard' : '/patient/dashboard'} />} />
         
         <Route path="/" element={user ? <Layout /> : <Navigate to="/login" />}>
           {/* Patient Routes */}

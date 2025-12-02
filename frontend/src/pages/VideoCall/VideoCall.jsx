@@ -1,11 +1,12 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ZegoUIKitPrebuilt } from '@zegocloud/zego-uikit-prebuilt';
 import { useAuth } from '../../hooks/useAuth';
 
 const VideoCall = () => {
   const { roomId } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const myMeeting = async (element) => {
     const appID = Number(import.meta.env.VITE_ZEGO_APP_ID);
@@ -38,6 +39,10 @@ const VideoCall = () => {
         mode: ZegoUIKitPrebuilt.OneONoneCall,
       },
       showScreenSharingButton: true,
+      onLeaveRoom: () => {
+        // Redirect to dashboard or previous page when call ends
+        navigate(user?.role === 'doctor' ? '/doctor/dashboard' : '/patient/dashboard');
+      },
     });
   };
 
