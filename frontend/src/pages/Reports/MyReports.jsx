@@ -1,15 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
+import { useWebSocket } from '../../hooks/useWebSocket';
 import { FileText, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const MyReports = () => {
+  const { user } = useAuth();
+  const socket = useWebSocket();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadReports();
   }, []);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('patient:update', (data) => {
+        if (data.patientId === (user.id || user._id) && data.type === 'report') {
+          toast(data.message, {
+            icon: '📋',
+            style: {
+              background: '#EFF6FF',
+              color: '#1E40AF',
+              border: '1px solid #3B82F6'
+            }
+          });
+          loadReports();
+        }
+      });
+
+      return () => {
+        socket.off('patient:update');
+      };
+    }
+  }, [socket, user]);
 
   const loadReports = async () => {
     try {

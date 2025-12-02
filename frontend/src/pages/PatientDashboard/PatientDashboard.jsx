@@ -51,6 +51,7 @@ const PatientDashboard = () => {
               border: '1px solid #3B82F6'
             }
           });
+          loadDashboardData();
         }
       });
 

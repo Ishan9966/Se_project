@@ -287,7 +287,7 @@ const PatientDetail = () => {
                   <div className="flex items-center gap-2">
                     {report.fileUrl && (
                       <a 
-                        href={`http://localhost:5000${report.fileUrl}`} 
+                        href={report.fileUrl.startsWith('http') ? report.fileUrl : `http://localhost:5000${report.fileUrl}`}
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-teal-600 text-sm hover:underline flex items-center gap-1"
@@ -461,7 +461,7 @@ const PatientDetail = () => {
                   <div className="flex items-center gap-2">
                     {pres.imageUrl && (
                       <a 
-                        href={`http://localhost:5000${pres.imageUrl}`} 
+                        href={pres.imageUrl.startsWith('http') ? pres.imageUrl : `http://localhost:5000${pres.imageUrl}`}
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-teal-600 text-sm hover:underline flex items-center gap-1"

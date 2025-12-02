@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { medicineService } from '../../services/medicineService';
 import { useAuth } from '../../hooks/useAuth';
+import { useWebSocket } from '../../hooks/useWebSocket';
 import toast from 'react-hot-toast';
 import { Pill, Plus, X, Clock, Check, AlertCircle } from 'lucide-react';
 
 const MedicineReminders = () => {
   const { user } = useAuth();
+  const socket = useWebSocket();
   const [medicines, setMedicines] = useState([]);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,6 +25,28 @@ const MedicineReminders = () => {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('patient:update', (data) => {
+        if (data.patientId === (user.id || user._id) && data.type === 'medicine_comment') {
+          toast(data.message, {
+            icon: '💬',
+            style: {
+              background: '#EFF6FF',
+              color: '#1E40AF',
+              border: '1px solid #3B82F6'
+            }
+          });
+          loadData();
+        }
+      });
+
+      return () => {
+        socket.off('patient:update');
+      };
+    }
+  }, [socket, user]);
 
   const loadData = async () => {
     try {
@@ -58,7 +82,7 @@ const MedicineReminders = () => {
         instructions: ''
       });
       loadData();
-    } catch (error) {
+    } catch {
       toast.error('Failed to add medicine');
     }
   };

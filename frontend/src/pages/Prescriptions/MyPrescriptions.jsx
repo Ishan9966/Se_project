@@ -1,15 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { prescriptionService } from '../../services/prescriptionService';
+import { useAuth } from '../../hooks/useAuth';
+import { useWebSocket } from '../../hooks/useWebSocket';
 import { FileText, Pill, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const MyPrescriptions = () => {
+  const { user } = useAuth();
+  const socket = useWebSocket();
   const [prescriptions, setPrescriptions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadPrescriptions();
   }, []);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('patient:update', (data) => {
+        if (data.patientId === (user.id || user._id) && data.type === 'prescription') {
+          toast(data.message, {
+            icon: '💊',
+            style: {
+              background: '#EFF6FF',
+              color: '#1E40AF',
+              border: '1px solid #3B82F6'
+            }
+          });
+          loadPrescriptions();
+        }
+      });
+
+      return () => {
+        socket.off('patient:update');
+      };
+    }
+  }, [socket, user]);
 
   const loadPrescriptions = async () => {
     try {
